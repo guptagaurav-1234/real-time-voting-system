@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --admin-color: #e74c3c;
+            --user-color: #2ecc71;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('https://images.unsplash.com/photo-1551524559-8af4e6624178?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .login-container { 
+            max-width: 500px; 
+            margin: 100px auto; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+            border-radius: 10px; 
+            overflow: hidden; 
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .login-header { 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .admin-header { background-color: var(--admin-color); }
+        .user-header { background-color: var(--user-color); }
+        
+        .party-card { 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s; 
+        }
+        .party-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+        }
+        
+        .party-img-container {
+            height: 200px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+        
+        .party-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+            background: white;
+        }
+        
+        .logout-btn { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000; 
+        }
+        
+        .nav-pills .nav-link.active { 
+            background-color: var(--primary-color); 
+        }
+        
+        .vote-btn { 
+            width: 100%; 
+            margin-top: auto;
+        }
+        
+        .result-chart { 
+            height: 300px; 
+            margin-top: 30px; 
+        }
+        
+        .hidden { display: none; }
+        
+        /* Fallback image styling */
+        .fallback-img {
+            font-size: 3rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="login-container">
+                        <div class="login-header admin-header">
+                            <h3><i class="fas fa-user-shield"></i> Admin Login</h3>
+                        </div>
+                        <div class="login-body">
+                            <div class="mb-3">
+                                <label for="adminUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="adminUsername" placeholder="Enter admin username">
+                            </div>
+                            <div class="mb-3">
+                                <label for="adminPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="adminPassword" placeholder="Enter password">
+                            </div>
+                            <button class="btn btn-danger w-100" onclick="login('admin')">Login as Admin</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="login-container">
+                        <div class="login-header user-header">
+                            <h3><i class="fas fa-user"></i> Voter Login</h3>
+                        </div>
+                        <div class="login-body">
+                            <div class="mb-3">
+                                <label for="voterId" class="form-label">Voter ID</label>
+                                <input type="text" class="form-control" id="voterId" placeholder="Enter your voter ID">
+                            </div>
+                            <div class="mb-3">
+                                <label for="voterPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="voterPassword" placeholder="Enter password">
+                            </div>
+                            <button class="btn btn-success w-100" onclick="login('user')">Login as Voter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="hidden container mt-4">
+        <button class="btn btn-warning logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        
+        <h2 class="text-center mb-4 text-white"><i class="fas fa-user-shield"></i> Admin Dashboard</h2>
+        
+        <ul class="nav nav-pills mb-4 justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="showAdminTab('manageParties')">Manage Parties</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showAdminTab('viewResults')">View Results</a>
+            </li>
+        </ul>
+        
+        <!-- Manage Parties Tab -->
+        <div id="managePartiesTab">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-plus-circle"></i> Add New Party</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="partyName" class="form-label">Party Name</label>
+                                <input type="text" class="form-control" id="partyName" placeholder="Enter party name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="partyImage" class="form-label">Party Image URL</label>
+                                <input type="text" class="form-control" id="partyImage" placeholder="Enter image URL">
+                            </div>
+                            <div class="mb-3">
+                                <label for="partyManifesto" class="form-label">Manifesto File</label>
+                                <input type="text" class="form-control" id="partyManifesto" placeholder="Enter manifesto file name (e.g., party_manifesto.pdf)">
+                            </div>
+                            <button class="btn btn-success" onclick="addParty()"><i class="fas fa-plus"></i> Add Party</button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="party-img-container">
+                                <img id="partyImagePreview" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Ashoka_Chakra.svg/240px-Ashoka_Chakra.svg.png" class="party-img" alt="Ashoka Chakra" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'fallback-img\'><i class=\'fas fa-landmark\'></i></div>';">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 class="mb-3 text-white"><i class="fas fa-list"></i> Current Parties</h4>
+            <div class="row" id="adminPartyList">
+                <!-- Parties will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- View Results Tab -->
+        <div id="viewResultsTab" class="hidden">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4><i class="fas fa-chart-bar"></i> Voting Results</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group" id="resultsList">
+                                <!-- Results will be loaded here -->
+                            </ul>
+                            <button class="btn btn-danger mt-3" onclick="resetVotes()"><i class="fas fa-trash"></i> Reset All Votes</button>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="resultsChart" class="result-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Voting Page -->
+    <div id="userVotingPage" class="hidden container mt-4">
+        <button class="btn btn-warning logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        
+        <h2 class="text-center mb-4 text-white"><i class="fas fa-vote-yea"></i> Cast Your Vote</h2>
+        <p class="text-center text-white-50 mb-4">Please select your preferred political party</p>
+        
+        <div class="row" id="partyList">
+            <!-- Parties will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Vote Confirmation Modal -->
+    <div class="modal fade" id="voteConfirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Vote Submitted</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Thank you for voting! Your vote for <span id="votedPartyName"></span> has been recorded.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> For security reasons, you cannot vote again from this account.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Initialize data
+        let parties = JSON.parse(localStorage.getItem('parties')) || [
+            { 
+                id: 1, 
+                name: "Bharatiya Janata Party", 
+                image: "bjp.png", 
+                votes: 0,
+                manifesto: "BJP_manifesto.pdf"
+            },
+            { 
+                id: 2, 
+                name: "Indian National Congress", 
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Indian_National_Congress_hand_logo.svg/240px-Indian_National_Congress_hand_logo.svg.png", 
+                votes: 0,
+                manifesto: "Congress_manifesto.pdf"
+            },
+            { 
+                id: 3, 
+                name: "Aam Aadmi Party", 
+                image: "aap.png", 
+                votes: 0,
+                manifesto: "AAP_manifesto.pdf"
+            }
+        ];
+        
+        let voters = JSON.parse(localStorage.getItem('voters')) || [
+            { id: "voter1", password: "vote123", hasVoted: false },
+            { id: "voter2", password: "vote123", hasVoted: false }
+        ];
+        
+        const adminCredentials = { username: "admin", password: "admin123" };
+        let currentUser = null;
+        let resultsChart = null;
+
+        // Initialize the page
+        $(document).ready(function() {
+            // Check if user is already logged in
+            if (localStorage.getItem('currentUser')) {
+                currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (currentUser.role === 'admin') {
+                    showAdminDashboard();
+                } else {
+                    showUserVotingPage();
+                }
+            }
+            
+            // Preview party image
+            $('#partyImage').on('input', function() {
+                const imgUrl = $(this).val();
+                if (imgUrl) {
+                    $('#partyImagePreview').attr('src', imgUrl);
+                } else {
+                    $('#partyImagePreview').attr('src', 'hdata:image/jpeg;base64,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ttps://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Ashoka_Chakra.svg/240px-Ashoka_Chakra.svg.png');
+                }
+            });
+            
+            // Load parties for admin and user
+            loadParties();
+            loadResults();
+        });
+
+        // Login function
+        function login(role) {
+            if (role === 'admin') {
+                const username = $('#adminUsername').val();
+                const password = $('#adminPassword').val();
+                
+                if (username === adminCredentials.username && password === adminCredentials.password) {
+                    currentUser = { role: 'admin' };
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showAdminDashboard();
+                } else {
+                    alert('Invalid admin credentials!');
+                }
+            } else if (role === 'user') {
+                const voterId = $('#voterId').val();
+                const password = $('#voterPassword').val();
+                
+                const voter = voters.find(v => v.id === voterId && v.password === password);
+                
+                if (voter) {
+                    if (voter.hasVoted) {
+                        alert('You have already voted! Each voter can only vote once.');
+                    } else {
+                        currentUser = { role: 'user', id: voterId };
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        showUserVotingPage();
+                    }
+                } else {
+                    alert('Invalid voter ID or password!');
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            $('#loginPage').removeClass('hidden');
+            $('#adminDashboard').addClass('hidden');
+            $('#userVotingPage').addClass('hidden');
+            
+            // Clear login forms
+            $('#adminUsername, #adminPassword, #voterId, #voterPassword').val('');
+        }
+
+        // Show admin dashboard
+        function showAdminDashboard() {
+            $('#loginPage').addClass('hidden');
+            $('#adminDashboard').removeClass('hidden');
+            $('#userVotingPage').addClass('hidden');
+            showAdminTab('manageParties');
+        }
+
+        // Show user voting page
+        function showUserVotingPage() {
+            $('#loginPage').addClass('hidden');
+            $('#adminDashboard').addClass('hidden');
+            $('#userVotingPage').removeClass('hidden');
+            loadParties();
+        }
+
+        // Admin tab navigation
+        function showAdminTab(tabName) {
+            if (tabName === 'manageParties') {
+                $('#managePartiesTab').removeClass('hidden');
+                $('#viewResultsTab').addClass('hidden');
+                $('.nav-pills .nav-link').removeClass('active');
+                $('.nav-pills .nav-link:first').addClass('active');
+            } else if (tabName === 'viewResults') {
+                $('#managePartiesTab').addClass('hidden');
+                $('#viewResultsTab').removeClass('hidden');
+                $('.nav-pills .nav-link').removeClass('active');
+                $('.nav-pills .nav-link:last').addClass('active');
+                loadResults();
+            }
+        }
+
+        // Add new party
+        function addParty() {
+            const name = $('#partyName').val();
+            const image = $('#partyImage').val();
+            const manifesto = $('#partyManifesto').val();
+            
+            if (!name) {
+                alert('Please enter a party name');
+                return;
+            }
+            
+            const newParty = {
+                id: parties.length > 0 ? Math.max(...parties.map(p => p.id)) + 1 : 1,
+                name: name,
+                image: image || 'https://via.placeholder.com/300x200?text=Party+Image',
+                votes: 0,
+                manifesto: manifesto || 'default_manifesto.pdf'
+            };
+            
+            parties.push(newParty);
+            saveParties();
+            loadParties();
+            
+            // Clear form
+            $('#partyName, #partyImage, #partyManifesto').val('');
+            $('#partyImagePreview').attr('src', 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Ashoka_Chakra.svg/240px-Ashoka_Chakra.svg.png');
+        }
+
+        // Delete party
+        function deleteParty(id) {
+            if (confirm('Are you sure you want to delete this party? All votes for this party will be lost.')) {
+                parties = parties.filter(party => party.id !== id);
+                saveParties();
+                loadParties();
+                loadResults();
+            }
+        }
+
+        // Save parties to localStorage
+        function saveParties() {
+            localStorage.setItem('parties', JSON.stringify(parties));
+        }
+
+        // View manifesto
+        function viewManifesto(manifestoFile) {
+            // Open the manifesto in a new tab
+            window.open(manifestoFile, '_blank');
+        }
+
+        // Load parties for admin and user
+        function loadParties() {
+            // Admin view
+            let adminHtml = '';
+            parties.forEach(party => {
+                adminHtml += `
+                    <div class="col-md-4 mb-4">
+                        <div class="card party-card h-100">
+                            <div class="party-img-container">
+                                <img src="${party.image}" class="party-img" alt="${party.name}" 
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'fallback-img\'><i class=\'fas fa-landmark\'></i></div>';">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">${party.name}</h5>
+                                <p class="card-text">Votes: ${party.votes}</p>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-danger btn-sm" onclick="deleteParty(${party.id})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    <button class="btn btn-info btn-sm" onclick="viewManifesto('${party.manifesto}')">
+                                        <i class="fas fa-file-pdf"></i> Manifesto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#adminPartyList').html(adminHtml);
+            
+            // User view
+            let userHtml = '';
+            parties.forEach(party => {
+                userHtml += `
+                    <div class="col-md-4 mb-4">
+                        <div class="card party-card h-100">
+                            <div class="party-img-container">
+                                <img src="${party.image}" class="party-img" alt="${party.name}" 
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'fallback-img\'><i class=\'fas fa-landmark\'></i></div>';">
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">${party.name}</h5>
+                                <button class="btn btn-info btn-sm mb-2" onclick="viewManifesto('${party.manifesto}')">
+                                    <i class="fas fa-file-pdf"></i> View Manifesto
+                                </button>
+                                <button class="btn btn-primary vote-btn mt-auto" onclick="castVote(${party.id})">
+                                    <i class="fas fa-vote-yea"></i> Vote for ${party.name.split(' ')[0]}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#partyList').html(userHtml);
+        }
+
+        // Cast vote
+        function castVote(partyId) {
+            if (!confirm('Are you sure you want to vote for this party? This action cannot be undone.')) {
+                return;
+            }
+            
+            // Find the party
+            const party = parties.find(p => p.id === partyId);
+            if (party) {
+                // Update vote count
+                party.votes++;
+                saveParties();
+                
+                // Mark voter as voted
+                const voter = voters.find(v => v.id === currentUser.id);
+                if (voter) {
+                    voter.hasVoted = true;
+                    localStorage.setItem('voters', JSON.stringify(voters));
+                }
+                
+                // Show confirmation
+                $('#votedPartyName').text(party.name);
+                const modal = new bootstrap.Modal(document.getElementById('voteConfirmationModal'));
+                modal.show();
+                
+                // Disable all vote buttons
+                $('.vote-btn').prop('disabled', true).addClass('btn-secondary').removeClass('btn-primary');
+            }
+        }
+
+        // Load and display results
+        function loadResults() {
+            // Update results list
+            let resultsHtml = '';
+            parties.forEach(party => {
+                resultsHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${party.name}
+                        <span class="badge bg-primary rounded-pill">${party.votes}</span>
+                    </li>
+                `;
+            });
+            $('#resultsList').html(resultsHtml);
+            
+            // Update chart
+            updateChart();
+        }
+
+        // Update results chart
+        function updateChart() {
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            
+            // Destroy previous chart if exists
+            if (resultsChart) {
+                resultsChart.destroy();
+            }
+            
+            // Prepare data
+            const labels = parties.map(party => party.name);
+            const data = parties.map(party => party.votes);
+            const backgroundColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+            ];
+            
+            // Create new chart
+            resultsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c.replace('0.6', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Reset all votes
+        function resetVotes() {
+            if (confirm('Are you sure you want to reset ALL votes? This cannot be undone.')) {
+                parties.forEach(party => {
+                    party.votes = 0;
+                });
+                saveParties();
+                
+                // Reset all voters' hasVoted status
+                voters.forEach(voter => {
+                    voter.hasVoted = false;
+                });
+                localStorage.setItem('voters', JSON.stringify(voters));
+                
+                loadResults();
+                loadParties();
+                alert('All votes have been reset and voters can vote again.');
+            }
+        }
+    </script>
+</body>
+</html>
